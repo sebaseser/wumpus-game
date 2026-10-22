@@ -1,0 +1,71 @@
+<main class="shell">
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Cacería en la cueva, inicio">
+      <span class="brand-mark" aria-hidden="true">✦</span>
+      <span>CUADERNO DE CAMPO <b>/ CUEVA 01</b></span>
+    </a>
+    <span class="edition">EXPEDICIÓN WUMPUS</span>
+  </header>
+
+  @if (!game) {
+    <section class="intro-layout">
+      <div class="intro-copy">
+        <p class="eyebrow"><span></span> ARCHIVO DE EXPLORACIÓN · 01</p>
+        <h1>La cueva<br /><em>te espera.</em></h1>
+        <p class="intro-text">Encuentra el oro, evita al Wumpus y vuelve a la entrada. Escucha con atención: cada sala deja pistas.</p>
+        <div class="rule-strip">
+          <span><b>01</b> El hedor anuncia al Wumpus</span>
+          <span><b>02</b> La brisa revela un pozo cercano</span>
+          <span><b>03</b> El oro brilla en su sala</span>
+        </div>
+      </div>
+      <section class="setup-card" aria-labelledby="setup-title">
+        <div class="card-heading">
+          <div><p class="eyebrow">PREPARA TU RUTA</p><h2 id="setup-title">Configura la expedición</h2></div>
+          <span class="heading-icon" aria-hidden="true">⌖</span>
+        </div>
+        <p class="card-intro">Elige las condiciones de tu exploración. Siempre habrá una ruta segura hacia el oro.</p>
+        <app-setup-form (begin)="startGame($event)" />
+        <p class="privacy-note"><span aria-hidden="true">◈</span> Partida local · Sin cuentas ni datos guardados</p>
+      </section>
+    </section>
+  } @else {
+    <section class="game-layout">
+      <div class="game-heading">
+        <div>
+          <p class="eyebrow"><span></span> EXPEDICIÓN EN CURSO</p>
+          <h1>La cueva <em>Wumpus</em></h1>
+        </div>
+        <button class="restart-button" type="button" (click)="newGame()">↻ <span>Nueva partida</span></button>
+      </div>
+      <app-game-status [game]="game" />
+      <div class="play-area">
+        <section class="map-panel">
+          <div class="panel-heading">
+            <div><h2>Mapa de la cueva</h2><p>Explora con cautela. Lo desconocido permanece oculto.</p></div>
+            <span class="coordinates">({{ game.position.row + 1 }}, {{ game.position.col + 1 }})</span>
+          </div>
+          <app-game-grid [game]="game" />
+          <app-game-controls [disabled]="game.outcome !== 'playing'" [arrows]="game.arrows" (action)="perform($event)" />
+        </section>
+        <aside class="side-panel">
+          <app-perception-log [entries]="log" />
+          <div class="tip-card">
+            <span class="tip-icon" aria-hidden="true">⌁</span>
+            <div><strong>Consejo del explorador</strong><p>Un paso hacia un borde puede ser suficiente para encontrar una pared. Usa tus giros para elegir cada avance.</p></div>
+          </div>
+        </aside>
+      </div>
+      @if (game.outcome !== 'playing') {
+        <section class="result-banner" [class.victory]="game.outcome === 'won'" aria-live="assertive">
+          <div><p class="eyebrow">{{ game.outcome === 'won' ? 'EXPEDICIÓN COMPLETADA' : 'FIN DE LA EXPEDICIÓN' }}</p>
+            <h2>{{ game.outcome === 'won' ? '¡Has escapado con el oro!' : 'La cueva se ha quedado en silencio.' }}</h2>
+            <p>{{ game.outcome === 'won' ? 'Tesoro recuperado en ' + game.actions + ' acciones.' : 'La cueva revela ahora sus secretos. Inténtalo de nuevo.' }}</p>
+          </div>
+          <button class="primary-button" type="button" (click)="newGame()">Jugar otra vez <span aria-hidden="true">→</span></button>
+        </section>
+      }
+    </section>
+  }
+  <footer><span>HUNT THE WUMPUS <b>·</b> CUADERNO DE CAMPO</span><span>Una aventura de lógica y orientación</span></footer>
+</main>
