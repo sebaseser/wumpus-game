@@ -5,6 +5,7 @@ module.exports = function (config) {
     plugins: [
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
+      require('karma-coverage'),
     ],
     client: {
       jasmine: {
@@ -12,7 +13,11 @@ module.exports = function (config) {
       },
       clearContext: false,
     },
-    reporters: ['progress'],
+    reporters: ['progress', 'coverage'],
+    coverageReporter: {
+      dir: require('path').join(__dirname, 'coverage', 'wumpus-game'),
+      reporters: [{ type: 'html' }, { type: 'text-summary' }],
+    },
     browsers: ['ChromeHeadless'],
     restartOnFileChange: true,
   });

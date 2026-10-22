@@ -1,0 +1,103 @@
+@if (gameSession.game; as game) {
+  <section class="game-layout">
+    <div class="game-heading">
+      <div>
+        <h1>Hunt &nbsp;<em>the WUMPUS</em></h1>
+      </div>
+      <button class="restart-button" type="button" (click)="newGame()">
+        ↻ <span>Nueva partida</span>
+      </button>
+    </div>
+    <app-game-status [game]="game" />
+    <div class="play-area">
+      <section class="map-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Mapa de la cueva</h2>
+            <p>Explora con cautela. Usa los controles o las flechas del teclado para moverte.</p>
+          </div>
+          <span class="coordinates"
+            >({{ game.position.row + 1 }}, {{ game.position.col + 1 }})</span
+          >
+        </div>
+        <app-game-grid [game]="game" [showHiddenElements]="showHiddenElements" />
+      </section>
+      <aside class="side-panel">
+        <app-game-controls
+          [disabled]="game.outcome !== 'playing'"
+          [arrows]="game.arrows"
+          (action)="perform($event)"
+        />
+        <section class="current-room" aria-labelledby="current-room-title" aria-live="polite">
+          <h2 id="current-room-title">Casilla actual</h2>
+          <ul>
+            @for (message of gameSession.currentMessages; track $index) {
+              <li>{{ message }}</li>
+            }
+          </ul>
+        </section>
+        <app-perception-log [entries]="gameSession.log" />
+        <div class="tip-card">
+          <span class="tip-icon" aria-hidden="true">⌁</span>
+          <div>
+            <strong>Consejo del explorador</strong>
+            <ul class="tip-list">
+              <li>El hedor anuncia al Wumpus</li>
+              <li>La brisa revela un pozo cercano</li>
+              <li>El oro brilla en su sala</li>
+            </ul>
+            @if (game.outcome === 'playing') {
+              <button
+                class="visibility-toggle"
+                type="button"
+                [attr.aria-pressed]="showHiddenElements"
+                (click)="showHiddenElements = !showHiddenElements"
+              >
+                {{ showHiddenElements ? 'Ocultar elementos' : 'Mostrar elementos' }}
+              </button>
+            }
+          </div>
+        </div>
+      </aside>
+    </div>
+    @if (game.outcome !== 'playing') {
+      <dialog
+        appModalDialog
+        class="result-banner"
+        [class.victory]="game.outcome === 'won'"
+        aria-labelledby="result-title"
+        (cancel)="$event.preventDefault()"
+      >
+        <div>
+          <p class="eyebrow">
+            {{ game.outcome === 'won' ? 'EXPEDICIÓN COMPLETADA' : 'FIN DE LA EXPEDICIÓN' }}
+          </p>
+          <h2 id="result-title">
+            {{
+              game.outcome === 'won'
+                ? '¡Has escapado con el oro!'
+                : game.lossCause === 'pit'
+                  ? 'Caíste en un pozo.'
+                  : '¡El Wumpus te atrapó!'
+            }}
+          </h2>
+          <p>
+            {{
+              game.outcome === 'won'
+                ? 'Tesoro recuperado en ' + game.actions + ' acciones.'
+                : 'La cueva revela ahora sus secretos. Inténtalo de nuevo.'
+            }}
+          </p>
+        </div>
+        <button class="primary-button" type="button" (click)="newGame()">
+          Jugar otra vez <span aria-hidden="true">→</span>
+        </button>
+      </dialog>
+    }
+  </section>
+} @else {
+  <section class="missing-game" aria-live="polite">
+    <p>No hay una expedición activa.</p>
+    <a routerLink="/setup">Configurar una partida</a>
+  </section>
+}

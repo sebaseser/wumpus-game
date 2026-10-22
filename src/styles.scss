@@ -1,3 +1,5 @@
+@use './app/app';
+
 :root {
   color-scheme: dark;
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -8,7 +10,19 @@
   color: #f0f3ed;
 }
 
-* { box-sizing: border-box; }
-body { min-width: 320px; min-height: 100vh; margin: 0; }
-button, input { font: inherit; }
-::selection { color: #142016; background: #c6ed91; }
+* {
+  box-sizing: border-box;
+}
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+button,
+input {
+  font: inherit;
+}
+::selection {
+  color: #142016;
+  background: #c6ed91;
+}

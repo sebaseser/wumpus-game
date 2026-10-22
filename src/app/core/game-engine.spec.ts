@@ -1,8 +1,4 @@
-import {
-  GameConfig,
-  WumpusGame,
-  validateConfig,
-} from './game-engine';
+import { GameConfig, WumpusGame, validateConfig } from './game-engine';
 
 const baseConfig: GameConfig = { size: 3, pitCount: 0, arrows: 2 };
 const sequence = (...values: number[]): (() => number) => {
@@ -41,11 +37,16 @@ describe('WumpusGame layout generation', () => {
       const game = new WumpusGame({ size: 3, pitCount: maximumPits, arrows: 0 }, () => seed / 30);
       expect(Math.abs(game.gold.row) + Math.abs(game.gold.col)).toBe(1);
       expect(game.safeRoute[game.safeRoute.length - 1]).toEqual(game.gold);
-      expect(game.safeRoute.every((step) =>
-        !game.pits.some((pit) => pit.row === step.row && pit.col === step.col) &&
-        !(game.wumpus.row === step.row && game.wumpus.col === step.col),
-      )).toBeTrue();
-      expect(game.pits.some(({ row, col }) => row === game.gold.row && col === game.gold.col)).toBeFalse();
+      expect(
+        game.safeRoute.every(
+          (step) =>
+            !game.pits.some((pit) => pit.row === step.row && pit.col === step.col) &&
+            !(game.wumpus.row === step.row && game.wumpus.col === step.col),
+        ),
+      ).toBeTrue();
+      expect(
+        game.pits.some(({ row, col }) => row === game.gold.row && col === game.gold.col),
+      ).toBeFalse();
       expect(game.wumpus.row === game.gold.row && game.wumpus.col === game.gold.col).toBeFalse();
       if (game.gold.row === 1) game.moveForward();
       else {
@@ -85,6 +86,16 @@ describe('WumpusGame actions and perceptions', () => {
     expect(game.position).toEqual({ row: 0, col: 0 });
     expect(messages.join(' ')).toContain('pared');
     expect(game.actions).toBe(2);
+  });
+
+  it('moves one cell in the selected direction and updates facing in one action', () => {
+    const game = new WumpusGame(baseConfig, () => 0);
+    const messages = game.moveInDirection('E');
+
+    expect(game.position).toEqual({ row: 0, col: 1 });
+    expect(game.facing).toBe('E');
+    expect(game.actions).toBe(1);
+    expect(messages.length).toBeGreaterThan(0);
   });
 
   it('reports stench and breeze beside the live Wumpus and pits', () => {
@@ -159,6 +170,7 @@ describe('WumpusGame actions and perceptions', () => {
   it('tracks visited cells but hides undiscovered hazards until the game ends', () => {
     const game = new WumpusGame({ size: 3, pitCount: 1, arrows: 1 }, sequence(0.25, 0, 0));
     expect(game.cellContent(game.pits[0]!)).toBe('hidden');
+    expect(game.cellContent(game.pits[0]!, true)).toBe('pit');
     expect(game.cellContent(game.wumpus)).toBe('hidden');
     game.moveForward();
     expect(game.cellContent(game.position)).toBe('hunter');

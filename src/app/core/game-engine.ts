@@ -32,9 +32,15 @@ export function validateConfig(config: GameConfig): string[] {
   if (!Number.isInteger(config.pitCount) || config.pitCount < 0) {
     errors.push('La cantidad de pozos debe ser un número entero igual o mayor que 0.');
   }
-  if (Number.isInteger(config.size) && config.size >= 2 &&
-      Number.isInteger(config.pitCount) && config.pitCount > config.size * config.size - 3) {
-    errors.push(`Con este tablero puedes colocar como máximo ${config.size * config.size - 3} pozos.`);
+  if (
+    Number.isInteger(config.size) &&
+    config.size >= 2 &&
+    Number.isInteger(config.pitCount) &&
+    config.pitCount > config.size * config.size - 3
+  ) {
+    errors.push(
+      `Con este tablero puedes colocar como máximo ${config.size * config.size - 3} pozos.`,
+    );
   }
   if (!Number.isInteger(config.arrows) || config.arrows < 0) {
     errors.push('La cantidad de flechas debe ser un número entero igual o mayor que 0.');
@@ -60,8 +66,12 @@ export class WumpusGame {
   hasGold = false;
   wumpusAlive = true;
   outcome: GameOutcome = 'playing';
+  lossCause: 'pit' | 'wumpus' | null = null;
 
-  constructor(readonly config: GameConfig, random: () => number = Math.random) {
+  constructor(
+    readonly config: GameConfig,
+    random: () => number = Math.random,
+  ) {
     const errors = validateConfig(config);
     if (errors.length) {
       throw new Error(errors.join(' '));
@@ -73,14 +83,21 @@ export class WumpusGame {
     let gold = this.takeRandom(destinations, random);
     let route = this.randomizedRoute(gold, random);
     let available = this.allPositions().filter(
-      (position) => !samePosition(position, START) && !route.some((step) => samePosition(step, position)),
+      (position) =>
+        !samePosition(position, START) && !route.some((step) => samePosition(step, position)),
     );
 
     // Dense layouts may not leave enough cells for the hazards around a
     // longer route. In that case, move the gold to a random adjacent cell.
     if (available.length < config.pitCount + 1) {
-      const adjacentGolds = [{ row: 1, col: 0 }, { row: 0, col: 1 }];
-      gold = adjacentGolds[Math.min(adjacentGolds.length - 1, Math.floor(random() * adjacentGolds.length))]!;
+      const adjacentGolds = [
+        { row: 1, col: 0 },
+        { row: 0, col: 1 },
+      ];
+      gold =
+        adjacentGolds[
+          Math.min(adjacentGolds.length - 1, Math.floor(random() * adjacentGolds.length))
+        ]!;
       route = [gold];
       available = this.allPositions().filter(
         (position) => !samePosition(position, START) && !samePosition(position, gold),
@@ -116,20 +133,28 @@ export class WumpusGame {
   }
 
   moveForward(): string[] {
+    return this.moveInDirection(this.facing);
+  }
+
+  moveInDirection(facing: Facing): string[] {
     if (!this.canAct()) return [];
+    this.facing = facing;
     this.actions++;
     const delta = DIRECTIONS[this.facing];
     const next = { row: this.position.row + delta.row, col: this.position.col + delta.col };
-    if (!this.isInside(next)) return this.withPerceptions('¡Tocaste una pared! No puedes salir del tablero.');
+    if (!this.isInside(next))
+      return this.withPerceptions('¡Tocaste una pared! No puedes salir del tablero.');
 
     this.currentPosition = next;
     this.visited.add(positionKey(next));
     if (this.pits.some((pit) => samePosition(pit, next))) {
       this.outcome = 'lost';
+      this.lossCause = 'pit';
       return ['Caíste en un pozo. La partida terminó.'];
     }
     if (this.wumpusAlive && samePosition(this.wumpus, next)) {
       this.outcome = 'lost';
+      this.lossCause = 'wumpus';
       return ['¡El Wumpus te atrapó! La partida terminó.'];
     }
     if (samePosition(this.gold, next) && !this.hasGold) {
@@ -168,10 +193,10 @@ export class WumpusGame {
     return ['Sales de la cueva con el oro. ¡Ganaste!'];
   }
 
-  /** Map visibility never leaks undiscovered hazards during active play. */
-  cellContent(position: Position): CellContent {
+  /** Optionally reveals hidden map elements without changing game state. */
+  cellContent(position: Position, revealHiddenElements = false): CellContent {
     if (samePosition(position, this.position) && this.outcome !== 'lost') return 'hunter';
-    if (this.outcome !== 'playing') {
+    if (this.outcome !== 'playing' || revealHiddenElements) {
       if (samePosition(position, this.gold)) return 'gold';
       if (this.wumpusAlive && samePosition(position, this.wumpus)) return 'wumpus';
       if (this.pits.some((pit) => samePosition(pit, position))) return 'pit';
@@ -186,7 +211,8 @@ export class WumpusGame {
     const messages: string[] = [];
     if (this.wumpusAlive && this.adjacent(here, this.wumpus)) messages.push('Percibes un hedor.');
     if (this.pits.some((pit) => this.adjacent(here, pit))) messages.push('Sientes una brisa.');
-    if (!this.hasGold && samePosition(here, this.gold)) messages.push('El oro brilla en esta sala.');
+    if (!this.hasGold && samePosition(here, this.gold))
+      messages.push('El oro brilla en esta sala.');
     if (!messages.length) messages.push('No percibes nada inusual.');
     return messages;
   }
@@ -204,8 +230,9 @@ export class WumpusGame {
   }
 
   private isInside(position: Position): boolean {
-    return position.row >= 0 && position.col >= 0 &&
-      position.row < this.size && position.col < this.size;
+    return (
+      position.row >= 0 && position.col >= 0 && position.row < this.size && position.col < this.size
+    );
   }
 
   private allPositions(): Position[] {

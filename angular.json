@@ -3,7 +3,8 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
-    "analytics": false
+    "analytics": false,
+    "schematicCollections": ["angular-eslint"]
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -30,9 +31,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"]
           },
           "configurations": {
             "production": {
@@ -75,11 +74,14 @@
           "options": {
             "tsConfig": "tsconfig.spec.json",
             "karmaConfig": "karma.conf.cjs",
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
+            "polyfills": ["zone.js", "zone.js/testing"],
             "browsers": "ChromeHeadless"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
           }
         }
       }
